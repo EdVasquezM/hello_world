@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+//import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
 
 void main() {
@@ -7,18 +8,28 @@ void main() {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
   // This widget is the root of the app.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Welcome to the testing app: this is the title',
       theme: ThemeData(
-        primarySwatch: Colors.green,
+        primarySwatch: Colors.blueGrey,
       ),
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Welcome to the testing app: this is de AppBar'),
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.verified_user),
+              tooltip: 'Log in/Sign up',
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('This is a snack bar'))
+                );
+              }
+            ),
+          ],
         ),
         body: const Center(
           child: DoubleScreen(),
