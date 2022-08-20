@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
-//import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:hello_world/firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
+import 'login_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+      MaterialApp(
+          theme: ThemeData(
+            primarySwatch: Colors.blueGrey,
+          ),
+          home: const MyApp()
+      )
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -11,34 +21,70 @@ class MyApp extends StatelessWidget {
   // This widget is the root of the app.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Welcome to the testing app: this is the title',
-      theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
-      ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Welcome to the testing app: this is de AppBar'),
-          actions: <Widget>[
-            IconButton(
-              icon: const Icon(Icons.verified_user),
-              tooltip: 'Log in/Sign up',
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('This is a snack bar'))
-                );
-              }
-            ),
-          ],
+    initializeFirebaseAuth();
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('AppBar title'),
+        leading: IconButton (
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            //TODO show menu
+          },
         ),
-        body: const Center(
-          child: DoubleScreen(),
-        )
+        actions: <Widget>[
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(_createRoute());
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Colors.lightGreen,
+                //padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                //shadowColor: Colors.grey
+              ),
+              icon: const Icon(Icons.login_rounded),
+              label: const Text("Log in")
+            ),
+          )
+        ],
       ),
+      body: const Center(
+        child: DoubleScreen(),
+      )
     );
   }
+
+  void initializeFirebaseAuth() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099); //erase this line for production purposes
+  }
+}
+// to manage the navigation and animation to another page (login_page)
+Route _createRoute() {
+  return PageRouteBuilder(
+    pageBuilder: (context, animation, secondaryAnimation) => const LoginPage(),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(0.0, 1.0);
+      const end = Offset.zero;
+      var curve = Curves.ease;
+      final tween = Tween(begin: begin, end: end);
+      final  curvedAnimation = CurvedAnimation(
+        parent: animation,
+        curve: curve,
+      );
+      return SlideTransition(
+        position: tween.animate(curvedAnimation),
+        child: child,
+      );
+    },
+  );
 }
 
+//divide the screen to have two showings, those two can be copied to another file
 class DoubleScreen extends StatefulWidget {
   const DoubleScreen({Key? key}) : super(key: key);
   @override
@@ -62,7 +108,7 @@ class _DoubleScreenState extends State<DoubleScreen> {
   }
 }
 
-
+//widget with a infinite random number list
 class RandomWords extends StatefulWidget {
   const RandomWords({Key? key}) : super(key: key);
   @override
@@ -93,7 +139,7 @@ class _RandomWordsState extends State<RandomWords> {
   }
 }
 
-
+//widget with a number counter just pushing a floating button
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);
 
