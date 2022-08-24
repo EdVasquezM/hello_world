@@ -3,25 +3,29 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:hello_world/firebase_options.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
+import 'auth.dart';
 import 'login_page.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform,);
+  await FirebaseAuth.instance.useAuthEmulator('localhost', 9099); //TODO erase this line for production purposes
   runApp(
-      MaterialApp(
-          theme: ThemeData(
-            primarySwatch: Colors.blueGrey,
-          ),
-          home: const MyApp()
-      )
+    MaterialApp(
+      theme: ThemeData(
+        primarySwatch: Colors.blueGrey,
+      ),
+      home: const MyApp(),
+    ),
   );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+  Future<void> signOut() async {await Auth().signOut();}
   // This widget is the root of the app.
   @override
   Widget build(BuildContext context) {
-    initializeFirebaseAuth();
     return Scaffold(
       appBar: AppBar(
         title: const Text('AppBar title'),
@@ -35,16 +39,21 @@ class MyApp extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(10),
             child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(_createRoute());
-              },
-              style: ElevatedButton.styleFrom(
-                primary: Colors.lightGreen,
-                //padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                //shadowColor: Colors.grey
-              ),
-              icon: const Icon(Icons.login_rounded),
-              label: const Text("Log in")
+                onPressed: () {
+                  Navigator.of(context).push(_createRoute());
+                },
+                style: ElevatedButton.styleFrom(primary: Colors.lightGreen,),
+                icon: const Icon(Icons.login_rounded),
+                label: const Text("Log in")
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: ElevatedButton.icon(
+                onPressed: signOut,
+                style: ElevatedButton.styleFrom(primary: Colors.redAccent,),
+                icon: const Icon(Icons.exit_to_app_sharp),
+                label: const Text("Sing out")
             ),
           )
         ],
@@ -54,21 +63,13 @@ class MyApp extends StatelessWidget {
       )
     );
   }
-
-  void initializeFirebaseAuth() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    await FirebaseAuth.instance.useAuthEmulator('localhost', 9099); //erase this line for production purposes
-  }
 }
 // to manage the navigation and animation to another page (login_page)
 Route _createRoute() {
   return PageRouteBuilder(
     pageBuilder: (context, animation, secondaryAnimation) => const LoginPage(),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      const begin = Offset(0.0, 1.0);
+      const begin = Offset(0.8, 0.0);
       const end = Offset.zero;
       var curve = Curves.ease;
       final tween = Tween(begin: begin, end: end);
@@ -149,20 +150,28 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-
+  final String userText = '';
   void _incrementCounter() {
     setState(() {
       _counter++;
     });
-  }
-
-  @override
+  }@override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            StreamBuilder(
+              stream: Auth().authStateChanges,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Text('Snapshot error: ${snapshot.error}');
+                } else {
+                  return Text(snapshot.hasData ? '${Auth().currentUser?.email}' : 'User email');
+                }
+              },
+            ),
             const Text(
               'You have clicked the button this many times:',
             ),
